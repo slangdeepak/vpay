@@ -62,14 +62,9 @@ public class MainActivity extends AppCompatActivity {
         getButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Log.i("Slang", "Getting money...");
-//                Intent sendIntent = new Intent(MainActivity.this, GetActivity.class);
-//                MainActivity.this.startActivity(sendIntent);
-
-
-                //testing
-                AppActions.getInstance().sendMoney("9901266488@upi", "Samanvitha Kumar", "2", "testing", MainActivity.this);
-
+                Log.i("Slang", "Getting money...");
+                Intent sendIntent = new Intent(MainActivity.this, GetActivity.class);
+                MainActivity.this.startActivity(sendIntent);
             }
         });
 
