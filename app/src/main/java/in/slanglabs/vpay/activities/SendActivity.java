@@ -35,31 +35,22 @@ public class SendActivity extends Activity {
         amountView = findViewById(R.id.getAmount);
         noteView = findViewById(R.id.sendNote);
 
+        Intent intent = getIntent();
+        String mode = intent.getStringExtra("mode");
+        if (mode != null && mode.equals("direct")){
+            upiIdView.setText(intent.getStringExtra("upiId"));
+            nameView.setText(intent.getStringExtra("name"));
+            amountView.setText(intent.getStringExtra("amount"));
+            noteView.setText(intent.getStringExtra("note"));
+            sendMoney();
+            return;
+        }
+
         sendButton = findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String upiId = SendActivity.this.upiIdView.getText().toString();
-                String name = SendActivity.this.nameView.getText().toString();
-                String amount = SendActivity.this.amountView.getText().toString();
-                String note = SendActivity.this.noteView.getText().toString();
-
-                if (    upiId != null && upiId.length() > 0
-                    &&  name != null && name.length() > 0
-                    &&  amount != null && amount.length() > 0
-                    &&  note != null && note.length() > 0)
-                {
-                    String deeplink = "upi://pay?pa="+upiId+"&pn="+name+"&tn="+note+"&am="+amount+"&cu=INR";
-                    Log.i("Slang", "Sending deeplink intent -- " + deeplink);
-                    Intent intent = new Intent (Intent.ACTION_VIEW);
-                    intent.setData (Uri.parse(deeplink));
-                    startActivityForResult(intent, REQUEST_UPI);
-                }
-                else {
-                    Toast.makeText(SendActivity.this, "Incorrect or insufficient info. Cannot send money.", Toast.LENGTH_LONG).show();
-                }
-
-
+                SendActivity.this.sendMoney();
             }
         });
 
@@ -80,6 +71,29 @@ public class SendActivity extends Activity {
                 finish();
             }
         });
+    }
+
+    public boolean sendMoney(){
+        String upiId = SendActivity.this.upiIdView.getText().toString();
+        String name = SendActivity.this.nameView.getText().toString();
+        String amount = SendActivity.this.amountView.getText().toString();
+        String note = SendActivity.this.noteView.getText().toString();
+
+        if (    upiId != null && upiId.length() > 0
+                &&  name != null && name.length() > 0
+                &&  amount != null && amount.length() > 0
+                &&  note != null && note.length() > 0)
+        {
+            String deeplink = "upi://pay?pa="+upiId+"&pn="+name+"&tn="+note+"&am="+amount+"&cu=INR";
+            Log.i("Slang", "Sending deeplink intent -- " + deeplink);
+            Intent intent = new Intent (Intent.ACTION_VIEW);
+            intent.setData (Uri.parse(deeplink));
+            startActivityForResult(intent, REQUEST_UPI);
+        }
+        else {
+            Toast.makeText(SendActivity.this, "Incorrect or insufficient info. Cannot send money.", Toast.LENGTH_LONG).show();
+        }
+        return true;
     }
 
     @Override
