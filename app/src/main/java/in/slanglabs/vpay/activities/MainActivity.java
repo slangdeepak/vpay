@@ -12,8 +12,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import in.slanglabs.vpay.R;
 import in.slanglabs.vpay.controller.AppActions;
+import in.slanglabs.vpay.controller.SlangInterface;
 import in.slanglabs.vpay.model.AppData;
 
 public class MainActivity extends AppCompatActivity {
@@ -77,5 +82,29 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.startActivity(sendIntent);
             }
         });
+
+        SlangInterface.init(getApplication(), getCustomerNames(), AppActions.getInstance(this)); //TODO:
+    }
+
+    private static Set<String> getCustomerNames() {
+        //TODO: Get the list from phone contact
+        String[] names = new String[] {
+                "Kumar Rangarajan",
+                "Giridhar Murthy",
+                "Satish Gupta",
+                "Satish Chandra Gupta",
+                "Phaniraj Raghavendra",
+                "Ved Mathai",
+                "Satheesh Anbalagan",
+                "Deepak Srinivasa",
+                "Ritinkar Pramanik",
+                "Ankit Tiwari",
+                "Anshaj Khare",
+                "Manikant Thakur",
+                "Mohsin Mumtaz",
+                "Nissim Dsilva",
+                "Vinayak Jhunjunwala"
+        };
+        return new HashSet<>(Arrays.asList(names));
     }
 }

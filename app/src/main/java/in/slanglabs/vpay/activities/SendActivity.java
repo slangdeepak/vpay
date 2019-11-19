@@ -40,7 +40,7 @@ public class SendActivity extends Activity {
         if (mode != null && mode.equals("direct")){
             upiIdView.setText(intent.getStringExtra("upiId"));
             nameView.setText(intent.getStringExtra("name"));
-            amountView.setText(intent.getStringExtra("amount"));
+            amountView.setText("" + intent.getIntExtra("amount", 0));
             noteView.setText(intent.getStringExtra("note"));
             sendMoney();
             return;
