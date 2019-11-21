@@ -1,8 +1,13 @@
 package in.slanglabs.vpay.activities;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -20,6 +25,8 @@ import in.slanglabs.vpay.R;
 import in.slanglabs.vpay.controller.AppActions;
 import in.slanglabs.vpay.controller.SlangInterface;
 import in.slanglabs.vpay.model.AppData;
+import in.slanglabs.vpay.model.Contact;
+import in.slanglabs.vpay.model.PhoneData;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,8 +34,10 @@ public class MainActivity extends AppCompatActivity {
     ImageView sendButton;
     ImageView getButton;
     View contactsButton;
-
     AppData appData;
+    PhoneData phoneData;
+
+    private static final int REQUEST_READ_CONTACTS = 3333;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +48,14 @@ public class MainActivity extends AppCompatActivity {
 
         appData = AppData.getInstance();
         appData.init(this);
+
+        phoneData = PhoneData.getInstance();
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_CONTACTS)
+                == PackageManager.PERMISSION_GRANTED) {
+            phoneData.loadPhoneData(this);
+        } else {
+            requestPermission();
+        }
 
         upiIDEditText = findViewById(R.id.upiID);
         upiIDEditText.setText(appData.getUserUpiId());
@@ -86,25 +103,41 @@ public class MainActivity extends AppCompatActivity {
         SlangInterface.init(getApplication(), getCustomerNames(), AppActions.getInstance(this)); //TODO:
     }
 
-    private static Set<String> getCustomerNames() {
-        //TODO: Get the list from phone contact
-        String[] names = new String[] {
-                "Kumar Rangarajan",
-                "Giridhar Murthy",
-                "Satish Gupta",
-                "Satish Chandra Gupta",
-                "Phaniraj Raghavendra",
-                "Ved Mathai",
-                "Satheesh Anbalagan",
-                "Deepak Srinivasa",
-                "Ritinkar Pramanik",
-                "Ankit Tiwari",
-                "Anshaj Khare",
-                "Manikant Thakur",
-                "Mohsin Mumtaz",
-                "Nissim Dsilva",
-                "Vinayak Jhunjunwala"
-        };
-        return new HashSet<>(Arrays.asList(names));
+    private void requestPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.READ_CONTACTS)) {
+            // show UI part if you want here to show some rationale !!!
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_CONTACTS},
+                    REQUEST_READ_CONTACTS);
+        }
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.READ_CONTACTS)) {
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_CONTACTS},
+                    REQUEST_READ_CONTACTS);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_READ_CONTACTS: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    phoneData.loadPhoneData(this);
+                    SlangInterface.setCustomerNames(getCustomerNames());
+                } else {
+                    // permission denied,Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+        }
+    }
+
+    private Set<String> getCustomerNames() {
+        Set<String> customerNames = new HashSet<>();
+        customerNames.addAll(phoneData.getContactNames());
+        customerNames.addAll(appData.getContactNames());
+        Log.e("CustomerNames", customerNames.toString());
+        return customerNames;
     }
 }

@@ -57,10 +57,10 @@ public class ContactsActivity extends Activity {
         String mode = intent.getStringExtra("mode");
         contactsList = findViewById(R.id.contactsList);
         if (mode != null && mode.equals("pick")){
-            contactsAdapter = new ContactsAdapter(this, 0, appData.getAllContacts(), mode);
+            contactsAdapter = new ContactsAdapter(this, 0, new ArrayList<>(appData.getAppContacts()), mode);
         }
         else {
-            contactsAdapter = new ContactsAdapter(this, 0, appData.getAllContacts(), "normal");
+            contactsAdapter = new ContactsAdapter(this, 0, new ArrayList<>(appData.getAppContacts()), "normal");
         }
 
         contactsList.setAdapter(contactsAdapter);
@@ -78,11 +78,11 @@ public class ContactsActivity extends Activity {
     }
 
     private class ContactsAdapter extends ArrayAdapter<Contact> {
-        private List<Contact> contacts = new ArrayList<Contact>();
+        private List<Contact> contacts;
         private Context context;
         private String mode;
 
-        public ContactsAdapter(Context context, int resource, List<Contact> objects, String mode){
+        ContactsAdapter(Context context, int resource, List<Contact> objects, String mode){
             super(context, resource);
             this.context = context;
             contacts = objects;

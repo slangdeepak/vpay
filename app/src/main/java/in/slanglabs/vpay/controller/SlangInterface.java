@@ -80,6 +80,11 @@ public class SlangInterface {
         }
     }
 
+    public static void setCustomerNames(Set<String> customerNames) {
+        sBuddyListener.setCustomerNameHints(customerNames);
+        sActionHandler.setCustomerNames(customerNames);
+    }
+
     // The primary action handler for the VPay app
     public static class VPayActionHandler implements SlangMultiStepIntentAction, AppActionListener {
         private Set<String> mCustomerNames = new HashSet<>();

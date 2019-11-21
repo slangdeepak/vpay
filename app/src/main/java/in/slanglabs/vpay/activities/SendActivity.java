@@ -10,6 +10,12 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Locale;
+
+import in.slanglabs.platform.SlangBuddy;
+import in.slanglabs.platform.SlangLocale;
+import in.slanglabs.platform.prompt.SlangMessage;
 import in.slanglabs.vpay.R;
 
 public class SendActivity extends Activity {
@@ -42,7 +48,21 @@ public class SendActivity extends Activity {
             nameView.setText(intent.getStringExtra("name"));
             amountView.setText("" + intent.getIntExtra("amount", 0));
             noteView.setText(intent.getStringExtra("note"));
-            sendMoney();
+            if (!intent.getStringExtra("upiId").isEmpty() && intent.getIntExtra("amount", 0) > 0) {
+                sendMoney();
+            } else {
+                try {
+                    SlangBuddy.notifyUser(new SlangMessage(new HashMap<Locale, String>() {
+                        {
+                            put(SlangLocale.LOCALE_ENGLISH_IN, "Please enter the missing details and proceed");
+                            put(SlangLocale.LOCALE_HINDI_IN, "Please enter the missing details and proceed");
+                        }
+                    }));
+                } catch (SlangBuddy.UninitializedUsageException e) {
+                    e.printStackTrace();
+                }
+            }
+
             return;
         }
 
@@ -99,10 +119,10 @@ public class SendActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if (requestCode == REQUEST_UPI){
-            Log.i("Slang", "Received result from BHIM...");
+            Log.e("Slang", "Received result from BHIM [" + resultCode + "]");
         }
         else if (requestCode == REQUEST_CONTACT){
-            Log.i("Slang", "Received result from Contacts");
+            Log.e("Slang", "Received result from Contacts");
             String name = data.getStringExtra("name");
             String upiId = data.getStringExtra("upiId");
             nameView.setText(name);

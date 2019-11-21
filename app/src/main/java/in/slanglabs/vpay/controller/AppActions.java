@@ -20,6 +20,9 @@ import in.slanglabs.platform.SlangLocale;
 import in.slanglabs.platform.SlangSession;
 import in.slanglabs.platform.prompt.SlangMessage;
 import in.slanglabs.vpay.activities.SendActivity;
+import in.slanglabs.vpay.model.AppData;
+import in.slanglabs.vpay.model.Contact;
+import in.slanglabs.vpay.model.PhoneData;
 
 public class AppActions implements SlangInterface.AppActionHandler {
     private static Activity sActivity;
@@ -87,6 +90,10 @@ public class AppActions implements SlangInterface.AppActionHandler {
         //TODO: Check "name" for whether it is a phone number or contact name and take action  accordingly.
         Intent sendIntent = new Intent(session.getCurrentActivity(), SendActivity.class);
         sendIntent.putExtra("name", name);
+        Contact contact = AppData.getInstance().getContactForName(name);
+        if (null == contact) contact = PhoneData.getInstance().getContactForName(name);
+        if (null != contact) sendIntent.putExtra("upiId", contact.upiId);
+        else sendIntent.putExtra("upiId", "");
         sendIntent.putExtra("amount", amount);
         sendIntent.putExtra("note", notes);
         sendIntent.putExtra("mode", "direct");

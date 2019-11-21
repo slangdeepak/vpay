@@ -1,21 +1,20 @@
 package in.slanglabs.vpay.model;
 
 import android.content.Context;
-import android.util.JsonReader;
 import android.util.Log;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 public class AppData {
     //SINGLETON STUFF
@@ -29,7 +28,7 @@ public class AppData {
 
     //PROPERTIES
     private String userUpiId;
-    private ArrayList<Contact> contacts;
+    private Map<String, Contact> appContacts;
     private Context context;
     private boolean initialized = false;
 
@@ -54,64 +53,45 @@ public class AppData {
         saveData();
     }
 
-    public List<Contact> getAllContacts(){
-        return contacts;
+    public Collection<Contact> getAppContacts() {
+        return appContacts.values();
+    }
+
+    public Set<String> getContactNames() {
+        return appContacts.keySet();
+    }
+
+    public Contact getContactForName(String name){
+        return appContacts.get(name);
     }
 
     public boolean addContact(String name, String upiId){
-        for (Contact contact : contacts){
-            if (contact.name.equals(name) && contact.upiId.equals(upiId)){
-                return false;
-            }
-        }
-        contacts.add(new Contact(name, upiId));
+        if (appContacts.containsKey(name) && upiId.equals(appContacts.get(name).upiId)) return false;
+        appContacts.put(name, new Contact(name, upiId));
         saveData();
         return true;
     }
 
-    public List<Contact> getContactsForName(String name){
-        ArrayList<Contact> result = new ArrayList<Contact>();
-        for (Contact contact : contacts){
-            if (contact.name.equals(name)){
-                result.add(new Contact(contact.name, contact.upiId));
-            }
-        }
-        return result;
-    }
-
     public boolean editContact(String oldName, String oldUpiId, String newName, String newUpiId){
-        Contact candidate = null;
-        for (Contact contact : contacts){
-            if (contact.name.equals(oldName) && contact.upiId.equals(oldUpiId)){
-                candidate = contact;
-                break;
-            }
-        }
+        Contact candidate = appContacts.get(oldName);
         if (candidate != null){
             candidate.name = newName;
             candidate.upiId = newUpiId;
+            appContacts.remove(oldName);
+            appContacts.put(newName, candidate);
             saveData();
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     public boolean deleteContact(String name, String upiId){
-        Contact candidate = null;
-        for (Contact contact : contacts){
-            if (contact.name.equals(name) && contact.upiId.equals(upiId)){
-                candidate = contact;
-                break;
-            }
-        }
-        if (candidate != null){
-            contacts.remove(candidate);
+        if (appContacts.containsKey(name)){
+            appContacts.remove(name);
             saveData();
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -119,12 +99,11 @@ public class AppData {
     public void loadData() {
         //temp init
         userUpiId = "9901299770@upi";
-        contacts = new ArrayList<Contact>();
-        contacts.add(new Contact("Phaniraj Raghavendra", "phanir@okhdfcbank"));
-        contacts.add(new Contact("Ved Mathai", "vedu29@okicici"));
-        contacts.add(new Contact("Deepak Srinivasa", "9901299770@upi"));
+        appContacts = new HashMap<>();
+        appContacts.put("Phaniraj Raghavendra", new Contact("Phaniraj Raghavendra", "phanir@okhdfcbank"));
+        appContacts.put("Ved Mathai", new Contact("Ved Mathai", "vedu29@okicici"));
+        appContacts.put("Deepak Srinivasa", new Contact("Deepak Srinivasa", "9901299770@upi"));
 
-        //TODO: should load data from internal file storage...
         try {
             FileInputStream fis = context.openFileInput("data.json");
             int bytesAvailable = fis.available();
@@ -137,15 +116,14 @@ public class AppData {
             if (data != null && data.length() > 0) {
                 JSONObject jdata = new JSONObject(data);
                 userUpiId = jdata.getString("userUpiId");
-                JSONArray jcontacts = jdata.getJSONArray("contacts");
-                contacts = new ArrayList<Contact>();
+                JSONArray jcontacts = jdata.getJSONArray("appContacts");
+                appContacts = new HashMap<>();
                 for (int i = 0; i < jcontacts.length(); i++) {
                     JSONObject jcontact = jcontacts.getJSONObject(i);
                     Contact contact = new Contact(jcontact.getString("name"), jcontact.getString("upiId"));
-                    contacts.add(contact);
+                    appContacts.put(jcontact.getString("name"), contact);
                 }
             }
-
         } catch (Exception e) {
             Log.e("Slang", e.getMessage());
             Log.e("Slang", "Could not load data from internal storage");
@@ -157,15 +135,14 @@ public class AppData {
             JSONObject result = new JSONObject();
             result.put("userUpiId", userUpiId);
             JSONArray jcontacts = new JSONArray();
-            for (Contact contact : contacts){
+            for (String name : appContacts.keySet()){
                 JSONObject jcontact = new JSONObject();
-                jcontact.put("name", contact.name);
-                jcontact.put("upiId", contact.upiId);
+                jcontact.put("name", appContacts.get(name).name);
+                jcontact.put("upiId", appContacts.get(name).upiId);
                 jcontacts.put(jcontact);
             }
-            result.put("contacts", jcontacts);
+            result.put("appContacts", jcontacts);
             String data = result.toString(4);
-            //TODO: should store into internal file storage...
             FileOutputStream outStream = context.openFileOutput("data.json", Context.MODE_PRIVATE);
             PrintWriter writer = new PrintWriter(outStream);
             writer.write(data);
@@ -177,12 +154,5 @@ public class AppData {
             Log.e("Slang", e.getMessage());
             Log.e("Slang", "Could not save data to internal storage");
         }
-
-
-
-
     }
-
-
-
 }
