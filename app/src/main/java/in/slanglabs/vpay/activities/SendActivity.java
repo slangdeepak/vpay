@@ -196,24 +196,24 @@ public class SendActivity extends Activity {
             if (null != data) {
                 String response = data.getStringExtra("response");
                 if(response == null) {
-                    handleCancel(requestCode == REQUEST_UPI_VOICE);
+                    handleCancel(requestCode == REQUEST_UPI_VOICE, null);
                 } else {
                     TransactionStatus txnStatus = getTransactionStatus(response);
                     //Check if success, submitted or failed
                     try {
                         if (txnStatus.mStatus.toLowerCase().equals("success")) {
-                            handleSuccess(requestCode == REQUEST_UPI_VOICE);
+                            handleSuccess(requestCode == REQUEST_UPI_VOICE, txnStatus);
                         } else if (txnStatus.mStatus.toLowerCase().equals("submitted")) {
                             //TODO: Submitted
                         } else {
-                            handleFail(requestCode == REQUEST_UPI_VOICE);
+                            handleFail(requestCode == REQUEST_UPI_VOICE, txnStatus);
                         }
                     } catch (Exception e) {
-                        handleFail(requestCode == REQUEST_UPI_VOICE);
+                        handleFail(requestCode == REQUEST_UPI_VOICE, txnStatus);
                     }
                 }
             } else {
-                handleCancel(requestCode == REQUEST_UPI_VOICE);
+                handleCancel(requestCode == REQUEST_UPI_VOICE, null);
             }
         } else if (requestCode == REQUEST_CONTACT){
             Log.e("Slang", "Received result from Contacts");
@@ -228,7 +228,7 @@ public class SendActivity extends Activity {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
-    private void handleCancel(boolean isVoice) {
+    private void handleCancel(boolean isVoice, TransactionStatus txnStatus) {
         if (isVoice) {
             HashMap<Locale, String> strings = new HashMap<>();
             strings.put(SlangLocale.LOCALE_ENGLISH_IN, "Sorry, transaction seems to have got canceled. Click the mic button and try again");
@@ -257,7 +257,7 @@ public class SendActivity extends Activity {
         }
     }
 
-    private void handleSuccess(boolean isVoice) {
+    private void handleSuccess(boolean isVoice, TransactionStatus txnStatus) {
         SharedPreferences sharedPreferences = getSharedPreferences("SharedPref", MODE_PRIVATE);
         String locale = sharedPreferences.getString("locale", "en");
         if (isVoice) {
@@ -280,10 +280,18 @@ public class SendActivity extends Activity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Congratulations!");
         if (null != mLastReceiver && null != mLastAmount && !mLastReceiver.isEmpty() && !mLastAmount.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
             if (locale.equalsIgnoreCase("en")) {
-                builder.setMessage("You've successfully sent rupees " + mLastAmount + " to " + mLastReceiver);
+                sb.append("You've successfully sent rupees " + mLastAmount + " to " + mLastReceiver);
+                if (null != txnStatus) sb.append("\n\nBelow are transaction details:\n");
             } else {
-                builder.setMessage("आपने " + mLastReceiver + " को सफलतापूर्वक " + mLastAmount + " रुपये भेजे हैं");
+                sb.append("आपने " + mLastReceiver + " को सफलतापूर्वक " + mLastAmount + " रुपये भेजे हैं");
+                if (null != txnStatus) sb.append("\n\nनीचे लेन-देन का विवरण है:\n");
+            }
+            if (null != txnStatus) {
+                sb.append("Transaction Number:" + txnStatus.mTxnId);
+                sb.append("\nUPI Response Code:" + txnStatus.mResponseCode);
+                sb.append("\nUPI Approval Reference Number:" + txnStatus.mApprovalRefNo);
             }
         } else {
             if (locale.equalsIgnoreCase("en")) {
@@ -300,7 +308,7 @@ public class SendActivity extends Activity {
         });
     }
 
-    private void handleFail(boolean isVoice) {
+    private void handleFail(boolean isVoice, TransactionStatus txnStatus) {
         if (isVoice) {
             HashMap<Locale, String> strings = new HashMap<>();
             strings.put(SlangLocale.LOCALE_ENGLISH_IN, "Sorry, transaction failed, please try again or say cancel");
@@ -347,8 +355,9 @@ public class SendActivity extends Activity {
         String responseCode = result.get("responseCode");
         String status = result.get("Status");
         String txnRef = result.get("txnRef");
+        String approvalRefNo = result.get("ApprovalRefNo");
 
-        return new TransactionStatus(txnId, responseCode, status, txnRef);
+        return new TransactionStatus(txnId, responseCode, status, txnRef, approvalRefNo);
     }
 
     private Dialog createNoLocationDialog(boolean showOptout) {

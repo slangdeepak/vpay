@@ -6,10 +6,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +55,8 @@ public class SlangInterface {
     private static AppActionHandler appActionHandler;
     private static VPayBuddyListener sBuddyListener = new VPayBuddyListener();
     private static VPayActionHandler sActionHandler = new VPayActionHandler();
+    private static boolean mLaunchedByAssistant;
+
     // The main entry point to SlangInterface
     public static void init(Application app, Set<String> customerNames, AppActionHandler callback) {
         appContext = app;
@@ -86,6 +90,52 @@ public class SlangInterface {
     public static void setCustomerNames(Set<String> customerNames) {
         sBuddyListener.setCustomerNameHints(customerNames);
         sActionHandler.setCustomerNames(customerNames);
+    }
+
+    public static void launchedByAssistant(boolean b) {
+        mLaunchedByAssistant = b;
+        // If Slang is initialized by now, then do the same thing we would have done at
+        // init time
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (SlangBuddy.isInitialized()) {
+                    greetAndTalk();
+                }
+            }
+        }, 1000);
+    }
+
+    private static Pair<String, String> getGreetingPrefix() {
+        Calendar c = Calendar.getInstance();
+        String greetingEn = "";
+        String greetingHi = "नमस्कार, ";
+        int timeOfDay = c.get(Calendar.HOUR_OF_DAY);
+
+        if (timeOfDay >= 0 && timeOfDay < 12) {
+            greetingEn = "Good Morning, ";
+        } else if (timeOfDay >= 12 && timeOfDay < 16) {
+            greetingEn = "Good Afternoon, ";
+        } else if (timeOfDay >= 16 && timeOfDay < 21) {
+            greetingEn = "Good Evening, ";
+        } else if (timeOfDay >= 21 && timeOfDay < 24) {
+            greetingEn = "Good Evening, ";
+        }
+
+        return new Pair(greetingEn, greetingHi);
+    }
+
+    private static void greetAndTalk() {
+        if (SlangBuddy.isInitialized()) {
+            Pair result = getGreetingPrefix();
+            try {
+                SlangBuddy.startConversation(getGreetingMessage(result.first.toString(), result.second.toString()), true);
+            } catch (SlangBuddy.UninitializedUsageException e) {
+                e.printStackTrace();
+            } catch (SlangBuddy.SlangDisabledException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // The primary action handler for the VPay app
@@ -267,11 +317,19 @@ public class SlangInterface {
     }
 
     private static void setupGreeting(boolean isSpoken) throws SlangBuddy.UninitializedUsageException {
-        HashMap<Locale, String> strings = new HashMap<>();
-        strings.put(SlangLocale.LOCALE_ENGLISH_IN, "Welcome to VPay, whom do you want to send the money and how much?");
-        strings.put(SlangLocale.LOCALE_HINDI_IN, "VPay में आपका स्वागत है, आप किसे और कितना पैसा भेजना चाहते हैं?");
-        SlangMessage message = SlangMessage.create(strings);
-        SlangBuddy.getGreetingMessage().overrideMessage(message);
+        Pair prefix = getGreetingPrefix();
+        SlangBuddy.getGreetingMessage().overrideMessage(getGreetingMessage(prefix.first.toString(), prefix.second.toString()));
         SlangBuddy.getGreetingMessage().overrideIsSpoken(isSpoken);
+    }
+
+    private static SlangMessage getGreetingMessage(String prefixEn, String prefixHi) {
+        HashMap<Locale, String> strings = new HashMap<>();
+        prefixEn = (prefixEn == null) ? "" : prefixEn;
+        prefixHi = (prefixHi == null) ? "" : prefixHi;
+        strings.put(SlangLocale.LOCALE_ENGLISH_IN, prefixEn + "Welcome to VPay, whom do you want to send the money and how much?");
+        strings.put(SlangLocale.LOCALE_HINDI_IN, prefixHi + "VPay में आपका स्वागत है, आप किसे और कितना पैसा भेजना चाहते हैं?");
+        SlangMessage message = SlangMessage.create(strings);
+
+        return message;
     }
 }
