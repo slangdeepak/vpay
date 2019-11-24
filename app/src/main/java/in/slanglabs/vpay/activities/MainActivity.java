@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -45,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
     AppData appData;
     PhoneData phoneData;
     ImageView helpButton;
-    ImageView langButton;
     private SharedPreferences sharedPreferences;
     private String locale;
-    private LinearLayout english, hindi;
+    Button englishButton;
+    Button hindiButton;
 
     private static final int REQUEST_READ_CONTACTS = 3333;
 
@@ -114,8 +115,8 @@ public class MainActivity extends AppCompatActivity {
 
         SlangInterface.init(getApplication(), getCustomerNames(), AppActions.getInstance(this));
 
-        english = findViewById(R.id.main_help_english);
-        hindi = findViewById(R.id.main_help_hindi);
+        englishButton = findViewById(R.id.englishButton);
+        hindiButton = findViewById(R.id.hindiButton);
 
         sharedPreferences = getSharedPreferences("SharedPref", MODE_PRIVATE);
         locale = sharedPreferences.getString("locale", "en");
@@ -134,25 +135,32 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        langButton = findViewById(R.id.lang_select);
         if (locale.equalsIgnoreCase("en")) {
-            langButton.setImageResource(R.drawable.english);
-            english.setVisibility(View.VISIBLE);
-            hindi.setVisibility(View.GONE);
+            englishButton.setAlpha(1);
+            hindiButton.setAlpha(0.5f);
         } else {
-            langButton.setImageResource(R.drawable.hindi);
-            hindi.setVisibility(View.VISIBLE);
-            english.setVisibility(View.GONE);
+            englishButton.setAlpha(0.5f);
+            hindiButton.setAlpha(1);
         }
-        langButton.setOnClickListener(new View.OnClickListener() {
+        englishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    if (locale.equalsIgnoreCase("en")) {
-                        SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_HINDI_IN);
-                    } else {
-                        SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_ENGLISH_IN);
-                    }
+                    SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_ENGLISH_IN);
+                    englishButton.setAlpha(1);
+                    hindiButton.setAlpha(0.5f);
+                } catch (Exception e) {
+                    //pass
+                }
+            }
+        });
+        hindiButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_HINDI_IN);
+                    englishButton.setAlpha(0.5f);
+                    hindiButton.setAlpha(1);
                 } catch (Exception e) {
                     //pass
                 }
@@ -199,13 +207,11 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("locale", locale);
             editor.apply();
             if (locale.equals("en")) {
-                english.setVisibility(View.VISIBLE);
-                hindi.setVisibility(View.GONE);
-                langButton.setImageResource(R.drawable.english);
+                englishButton.setAlpha(1);
+                hindiButton.setAlpha(0.5f);
             } else {
-                english.setVisibility(View.GONE);
-                hindi.setVisibility(View.VISIBLE);
-                langButton.setImageResource(R.drawable.hindi);
+                englishButton.setAlpha(0.5f);
+                hindiButton.setAlpha(1);
             }
         }
     };
