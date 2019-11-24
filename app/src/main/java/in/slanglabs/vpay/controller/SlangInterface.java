@@ -1,8 +1,11 @@
 package in.slanglabs.vpay.controller;
 
 import android.app.Application;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -22,6 +25,7 @@ import in.slanglabs.platform.SlangLocale;
 import in.slanglabs.platform.SlangSession;
 import in.slanglabs.platform.action.SlangAction;
 import in.slanglabs.platform.action.SlangMultiStepIntentAction;
+import in.slanglabs.platform.prompt.SlangMessage;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 
@@ -49,7 +53,6 @@ public class SlangInterface {
     private static AppActionHandler appActionHandler;
     private static VPayBuddyListener sBuddyListener = new VPayBuddyListener();
     private static VPayActionHandler sActionHandler = new VPayActionHandler();
-
     // The main entry point to SlangInterface
     public static void init(Application app, Set<String> customerNames, AppActionHandler callback) {
         appContext = app;
@@ -114,8 +117,7 @@ public class SlangInterface {
                     break;
             }
             try {
-                SlangBuddy.getGreetingMessage().overrideMessage("Welcome to VPay. How can I help?");
-                SlangBuddy.getGreetingMessage().overrideIsSpoken(false);
+                setupGreeting(false);
             } catch (SlangBuddy.UninitializedUsageException ignored) {}
             return Status.SUCCESS;
         }
@@ -174,8 +176,8 @@ public class SlangInterface {
         public void onInitialized() {
             try {
                 if (mASRHints != null) SlangBuddy.setSpeechRecognitionHints(mASRHints);
-                SlangBuddy.getGreetingMessage().overrideMessage("Welcome vPay, what would you like to do today");
-                displayMessage("Slang initialized");
+                setupGreeting(true);
+                SlangBuddy.getBuiltinUI().disableLocaleSelection(true);
             } catch (SlangBuddy.UninitializedUsageException e) {
                 displayMessage(e.getMessage());
             }
@@ -190,6 +192,12 @@ public class SlangInterface {
         @Override
         public void onLocaleChanged(final Locale newLocale) {
             displayMessage("Locale changed: " + newLocale.getDisplayName());
+            LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(appContext);
+
+            Intent localIntent = new Intent("localeChanged");
+            localIntent.putExtra("localeBroadcast", newLocale.getLanguage());
+            // Send local broadcast
+            localBroadcastManager.sendBroadcast(localIntent);
         }
 
         @Override
@@ -202,6 +210,7 @@ public class SlangInterface {
             HashSet<String> enASRHints = new HashSet<>(Arrays.asList(EN_ASR_HINTS));
             if (customerNames != null) enASRHints.addAll(customerNames);
             asrHints.put(SlangLocale.LOCALE_ENGLISH_IN, enASRHints);
+            asrHints.put(SlangLocale.LOCALE_HINDI_IN, enASRHints);
 
             mASRHints = asrHints;
             if (SlangBuddy.isInitialized()) {
@@ -216,14 +225,14 @@ public class SlangInterface {
 
     public interface AppActionHandler {
         void resolveContact(List<String> customerNames, SlangSession session, AppActionListener handler);
-        TransactionStatus sendMoney(
+        void sendMoney(
                 String name,
                 int amount,
                 String notes,
                 SlangSession session,
                 AppActionListener handler
         );
-        TransactionStatus receiveMoney(
+        void receiveMoney(
                 String name,
                 int amount,
                 String notes,
@@ -255,5 +264,14 @@ public class SlangInterface {
                 Toast.makeText(appContext, message, Toast.LENGTH_LONG).show();
             }
         }, 10);
+    }
+
+    private static void setupGreeting(boolean isSpoken) throws SlangBuddy.UninitializedUsageException {
+        HashMap<Locale, String> strings = new HashMap<>();
+        strings.put(SlangLocale.LOCALE_ENGLISH_IN, "Welcome to VPay, whom do you want to send the money and how much?");
+        strings.put(SlangLocale.LOCALE_HINDI_IN, "VPay में आपका स्वागत है, आप किसे और कितना पैसा भेजना चाहते हैं?");
+        SlangMessage message = SlangMessage.create(strings);
+        SlangBuddy.getGreetingMessage().overrideMessage(message);
+        SlangBuddy.getGreetingMessage().overrideIsSpoken(isSpoken);
     }
 }

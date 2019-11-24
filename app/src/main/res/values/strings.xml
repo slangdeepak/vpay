@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">VPay</string>
+    <string name="description_text">VPay is a technology demonstrator app that shows that voice powered conversational AI can enable users to speak to their apps to make payments using the UPI interface. \n\nWe hope you like it. If yes, let us know. If you don\'t, tell us but politely 😉\n\nThe SlangDunk Team</string>
+    <string name="do_not_show">Don\'t show this again</string>
+    <string name="welcome_title">Wecome to VPay!</string>
+    <string name="try_saying_en">You can try saying</string>
+    <string name="hint_en_1">\"Send 100 rupees to Kumar\"</string>
+    <string name="hint_en_2">\"I want to send money to Satish\"</string>
+    <string name="hint_en_3">\"150 rupees to Deepak\"</string>
+    <string name="try_saying_hi">नीचे दिए गए उदाहरणों को कह सकते हैं</string>
+    <string name="hint_hi_1">\"कुमार को 100 रुपये भेजें\"</string>
+    <string name="hint_hi_2">\"मैं सतीश को पैसे भेजना चाहता हूं\"</string>
+    <string name="hint_hi_3">\"दीपक को 150 रुपये\"</string>
+    <string name="enter_your_upi_id_here">Enter your UPI ID here</string>
+    <string name="my_upi_id">MY UPI ID</string>
+    <string name="my_vpay_contacts">My VPay Contacts</string>
+    <string name="todo">TODO</string>
 </resources>

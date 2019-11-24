@@ -8,8 +8,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import in.slanglabs.vpay.R;
+import in.slanglabs.vpay.controller.SlangInterface;
 import in.slanglabs.vpay.model.AppData;
+import in.slanglabs.vpay.model.PhoneData;
 
 public class ContactDetailActivity extends Activity {
 
@@ -59,6 +64,7 @@ public class ContactDetailActivity extends Activity {
                             Toast.makeText(ContactDetailActivity.this, "Saved contact.", Toast.LENGTH_SHORT).show();
                             Intent data = new Intent();
                             setResult(RESULT_OK, data);
+                            updateSlang();
                             finish();
                         }
                         else {
@@ -71,6 +77,7 @@ public class ContactDetailActivity extends Activity {
                             Toast.makeText(ContactDetailActivity.this, "Created new contact", Toast.LENGTH_SHORT).show();
                             Intent data = new Intent();
                             setResult(RESULT_OK, data);
+                            updateSlang();
                             finish();
                         }
                         else {
@@ -107,6 +114,7 @@ public class ContactDetailActivity extends Activity {
                         Toast.makeText(ContactDetailActivity.this, "Deleted contact.", Toast.LENGTH_SHORT).show();
                         Intent data = new Intent();
                         setResult(RESULT_OK, data);
+                        updateSlang();
                         finish();
                     }
                 });
@@ -114,5 +122,17 @@ public class ContactDetailActivity extends Activity {
             }
         }
 
+    }
+
+    private void updateSlang() {
+        try {
+            Set<String> customerNames = new HashSet<>();
+            customerNames.addAll(PhoneData.getInstance().getContactNames());
+            customerNames.addAll(AppData.getInstance().getContactNames());
+
+            SlangInterface.setCustomerNames(customerNames);
+        } catch (Exception e) {
+            //pass
+        }
     }
 }

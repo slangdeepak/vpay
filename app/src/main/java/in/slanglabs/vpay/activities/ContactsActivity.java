@@ -64,8 +64,6 @@ public class ContactsActivity extends Activity {
         }
 
         contactsList.setAdapter(contactsAdapter);
-
-
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

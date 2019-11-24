@@ -1,31 +1,39 @@
 package in.slanglabs.vpay.activities;
 
-import android.content.ContentResolver;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import in.slanglabs.platform.SlangBuddy;
+import in.slanglabs.platform.SlangLocale;
 import in.slanglabs.vpay.R;
 import in.slanglabs.vpay.controller.AppActions;
 import in.slanglabs.vpay.controller.SlangInterface;
 import in.slanglabs.vpay.model.AppData;
-import in.slanglabs.vpay.model.Contact;
 import in.slanglabs.vpay.model.PhoneData;
 
 public class MainActivity extends AppCompatActivity {
@@ -36,6 +44,11 @@ public class MainActivity extends AppCompatActivity {
     View contactsButton;
     AppData appData;
     PhoneData phoneData;
+    ImageView helpButton;
+    ImageView langButton;
+    private SharedPreferences sharedPreferences;
+    private String locale;
+    private LinearLayout english, hindi;
 
     private static final int REQUEST_READ_CONTACTS = 3333;
 
@@ -85,8 +98,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.i("Slang", "Getting money...");
-                Intent sendIntent = new Intent(MainActivity.this, GetActivity.class);
-                MainActivity.this.startActivity(sendIntent);
+                Toast.makeText(MainActivity.this, "Hang in there, this feature is coming soon...", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -100,7 +112,53 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        SlangInterface.init(getApplication(), getCustomerNames(), AppActions.getInstance(this)); //TODO:
+        SlangInterface.init(getApplication(), getCustomerNames(), AppActions.getInstance(this));
+
+        english = findViewById(R.id.main_help_english);
+        hindi = findViewById(R.id.main_help_hindi);
+
+        sharedPreferences = getSharedPreferences("SharedPref", MODE_PRIVATE);
+        locale = sharedPreferences.getString("locale", "en");
+        boolean ask = sharedPreferences.getBoolean("ask", true);
+        if (ask) {
+            Dialog dialog = createNoLocationDialog(true);
+            dialog.show();
+        }
+
+        helpButton = findViewById(R.id.helpView);
+        helpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Dialog dialog = createNoLocationDialog(false);
+                dialog.show();
+            }
+        });
+
+        langButton = findViewById(R.id.lang_select);
+        if (locale.equalsIgnoreCase("en")) {
+            langButton.setImageResource(R.drawable.english);
+            english.setVisibility(View.VISIBLE);
+            hindi.setVisibility(View.GONE);
+        } else {
+            langButton.setImageResource(R.drawable.hindi);
+            hindi.setVisibility(View.VISIBLE);
+            english.setVisibility(View.GONE);
+        }
+        langButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (locale.equalsIgnoreCase("en")) {
+                        SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_HINDI_IN);
+                    } else {
+                        SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_ENGLISH_IN);
+                    }
+                } catch (Exception e) {
+                    //pass
+                }
+            }
+        });
+        LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("localeChanged"));
     }
 
     private void requestPermission() {
@@ -133,11 +191,61 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private BroadcastReceiver listener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            locale = intent.getStringExtra("localeBroadcast");
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("locale", locale);
+            editor.apply();
+            if (locale.equals("en")) {
+                english.setVisibility(View.VISIBLE);
+                hindi.setVisibility(View.GONE);
+                langButton.setImageResource(R.drawable.english);
+            } else {
+                english.setVisibility(View.GONE);
+                hindi.setVisibility(View.VISIBLE);
+                langButton.setImageResource(R.drawable.hindi);
+            }
+        }
+    };
+
     private Set<String> getCustomerNames() {
         Set<String> customerNames = new HashSet<>();
         customerNames.addAll(phoneData.getContactNames());
         customerNames.addAll(appData.getContactNames());
         Log.e("CustomerNames", customerNames.toString());
         return customerNames;
+    }
+
+    private Dialog createNoLocationDialog(boolean showOptout) {
+        View view = View.inflate(MainActivity.this, R.layout.dialog_intro, null);
+        CheckBox neverShowDialog = view.findViewById(R.id.location_never_ask_again);
+
+        if (showOptout) {
+            neverShowDialog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                    // Save the preference
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("ask", !isChecked);
+                    editor.apply();
+                }
+            });
+        } else {
+            neverShowDialog.setVisibility(View.GONE);
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
+                .setTitle(R.string.welcome_title)
+                .setCancelable(false)
+                .setNeutralButton("Let's jump in", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setView(view);
+        return builder.create();
     }
 }
