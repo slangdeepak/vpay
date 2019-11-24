@@ -256,6 +256,7 @@ public class SendActivity extends Activity {
                 sb.append("\nUPI Response Code:" + txnStatus.mResponseCode);
                 sb.append("\nUPI Approval Reference Number:" + txnStatus.mApprovalRefNo);
             }
+            builder.setMessage(sb.toString());
         } else {
             if (locale.equalsIgnoreCase("en")) {
                 builder.setMessage("Congratulations, you've successfully sent the money");
