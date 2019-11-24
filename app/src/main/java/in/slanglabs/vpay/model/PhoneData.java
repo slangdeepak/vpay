@@ -6,6 +6,7 @@ import android.provider.ContactsContract;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,12 +21,9 @@ public class PhoneData {
 
     private Map<String, Contact> phoneContacts;
 
-    public Collection<Contact> getPhoneContacts() {
-        return phoneContacts.values();
-    }
-
     public Set<String> getContactNames() {
-        return phoneContacts.keySet();
+        if (null != phoneContacts) return phoneContacts.keySet();
+        else return new HashSet<>();
     }
 
     public Contact getContactForName(String name){
