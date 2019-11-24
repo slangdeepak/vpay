@@ -252,9 +252,12 @@ public class SendActivity extends Activity {
                 if (null != txnStatus) sb.append("\n\nनीचे लेन-देन का विवरण है:\n");
             }
             if (null != txnStatus) {
-                sb.append("Transaction Number:" + txnStatus.mTxnId);
-                sb.append("\nUPI Response Code:" + txnStatus.mResponseCode);
-                sb.append("\nUPI Approval Reference Number:" + txnStatus.mApprovalRefNo);
+                if (null != txnStatus.mTxnId && !txnStatus.mTxnId.isEmpty())
+                    sb.append("Transaction Number:" + txnStatus.mTxnId);
+                if (null != txnStatus.mResponseCode && !txnStatus.mResponseCode.isEmpty())
+                    sb.append("\nUPI Response Code:" + txnStatus.mResponseCode);
+                if (null != txnStatus.mApprovalRefNo && !txnStatus.mApprovalRefNo.isEmpty())
+                    sb.append("\nUPI Approval Reference Number:" + txnStatus.mApprovalRefNo);
             }
             builder.setMessage(sb.toString());
         } else {
