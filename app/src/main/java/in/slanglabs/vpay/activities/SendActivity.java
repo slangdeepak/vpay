@@ -3,17 +3,13 @@ package in.slanglabs.vpay.activities;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -43,9 +39,7 @@ public class SendActivity extends Activity {
     TextView amountView;
     TextView noteView;
     ImageView helpButton;
-    ImageView langButton;
     private SharedPreferences sharedPreferences;
-    private String locale;
     public static int REQUEST_UPI_VOICE = 1;
     public static int REQUEST_UPI_TOUCH = 2;
     public static int REQUEST_CONTACT = 3;
@@ -109,28 +103,6 @@ public class SendActivity extends Activity {
         });
 
         sharedPreferences = getSharedPreferences("SharedPref", MODE_PRIVATE);
-        locale = sharedPreferences.getString("locale", "en");
-        langButton = findViewById(R.id.lang_select);
-        if (locale.equalsIgnoreCase("en")) {
-            langButton.setImageResource(R.drawable.english);
-        } else {
-            langButton.setImageResource(R.drawable.hindi);
-        }
-        langButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    if (locale.equalsIgnoreCase("en")) {
-                        SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_HINDI_IN);
-                    } else {
-                        SlangBuddy.getBuddyContext().setCurrentLocale(SlangLocale.LOCALE_ENGLISH_IN);
-                    }
-                } catch (Exception e) {
-                    //pass
-                }
-            }
-        });
-        LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("localeChanged"));
     }
 
     private String mLastReceiver;
@@ -376,19 +348,4 @@ public class SendActivity extends Activity {
                 .setView(view);
         return builder.create();
     }
-
-    private BroadcastReceiver listener = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            locale = intent.getStringExtra("localeBroadcast");
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("locale", locale);
-            editor.apply();
-            if (locale.equals("en")) {
-                langButton.setImageResource(R.drawable.english);
-            } else {
-                langButton.setImageResource(R.drawable.hindi);
-            }
-        }
-    };
 }

@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private String locale;
     Button englishButton;
     Button hindiButton;
+    private LinearLayout english, hindi;
 
     private static final int REQUEST_READ_CONTACTS = 3333;
 
@@ -117,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
 
         SlangInterface.init(getApplication(), getCustomerNames(), AppActions.getInstance(this));
 
+        english = findViewById(R.id.main_help_english);
+        hindi = findViewById(R.id.main_help_hindi);
         englishButton = findViewById(R.id.englishButton);
         hindiButton = findViewById(R.id.hindiButton);
 
@@ -140,9 +143,14 @@ public class MainActivity extends AppCompatActivity {
         if (locale.equalsIgnoreCase("en")) {
             englishButton.setAlpha(1);
             hindiButton.setAlpha(0.5f);
+            english.setVisibility(View.VISIBLE);
+            hindi.setVisibility(View.GONE);
         } else {
             englishButton.setAlpha(0.5f);
             hindiButton.setAlpha(1);
+            hindi.setVisibility(View.VISIBLE);
+            english.setVisibility(View.GONE);
+
         }
         englishButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -229,9 +237,13 @@ public class MainActivity extends AppCompatActivity {
             if (locale.equals("en")) {
                 englishButton.setAlpha(1);
                 hindiButton.setAlpha(0.5f);
+                english.setVisibility(View.VISIBLE);
+                hindi.setVisibility(View.GONE);
             } else {
                 englishButton.setAlpha(0.5f);
                 hindiButton.setAlpha(1);
+                english.setVisibility(View.GONE);
+                hindi.setVisibility(View.VISIBLE);
             }
         }
     };
