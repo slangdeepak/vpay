@@ -86,15 +86,15 @@ public class AppActions implements SlangInterface.AppActionHandler {
 
     private static SlangMessage getCustomerMessage() {
         Map<Locale, String> msg = new HashMap<>();
-        msg.put(SlangLocale.LOCALE_ENGLISH_IN, "Please select the right customer from this list");
-        msg.put(SlangLocale.LOCALE_HINDI_IN, "कृपया इस सूची से सही ग्राहक चुनें");
+        msg.put(SlangLocale.LOCALE_ENGLISH_IN, "Please select the right contact from this list");
+        msg.put(SlangLocale.LOCALE_HINDI_IN, "कृपया इस सूची से सही संपर्क चुनें");
         return SlangMessage.create(msg, true);
     }
 
     private static SlangMessage getCancelMessage() {
         Map<Locale, String> msg = new HashMap<>();
         msg.put(SlangLocale.LOCALE_ENGLISH_IN, "No problem, click the mic button and let us know whenever you are ready");
-        msg.put(SlangLocale.LOCALE_HINDI_IN, "कृपया इस सूची से सही ग्राहक चुनें");
+        msg.put(SlangLocale.LOCALE_HINDI_IN, "कोई बात नहीं, जब भी आप तैयार हों, माइक बटन पर क्लिक करें और मुझसे कोई भी सहायता माँगें");
         return SlangMessage.create(msg, true);
     }
 

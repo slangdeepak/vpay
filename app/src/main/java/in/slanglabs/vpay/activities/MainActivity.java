@@ -10,6 +10,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -161,6 +163,24 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("localeChanged"));
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (getIntent().getBooleanExtra("KEY_HANDOVER_THROUGH_VELVET", false) ||
+                getIntent().getBooleanExtra("extra_accl_intent", false)) {
+            getIntent().removeExtra("extra_accl_intent");
+            getIntent().removeExtra("KEY_HANDOVER_THROUGH_VELVET");
+            // Launch after a second or so to let the google assistant voice feedback finish
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    SlangInterface.launchedByAssistant(true);
+                }
+            }, 1500);
+        }
+    }
+
     private void requestPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.READ_CONTACTS)) {
             // show UI part if you want here to show some rationale !!!
@@ -214,7 +234,6 @@ public class MainActivity extends AppCompatActivity {
         Set<String> customerNames = new HashSet<>();
         customerNames.addAll(phoneData.getContactNames());
         customerNames.addAll(appData.getContactNames());
-        Log.e("CustomerNames", customerNames.toString());
         return customerNames;
     }
 
