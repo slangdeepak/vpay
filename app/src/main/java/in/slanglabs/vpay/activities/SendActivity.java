@@ -69,21 +69,7 @@ public class SendActivity extends Activity {
             noteView.setText(intent.getStringExtra("note"));
             if (!intent.getStringExtra("upiId").isEmpty() && intent.getIntExtra("amount", 0) > 0) {
                 sendMoney(true);
-            } else {
-                try {
-                    SlangMessage message = new SlangMessage(new HashMap<Locale, String>() {
-                        {
-                            put(SlangLocale.LOCALE_ENGLISH_IN, "Please enter the missing details and proceed");
-                            put(SlangLocale.LOCALE_HINDI_IN, "Please enter the missing details and proceed");
-                        }
-                    });
-                    message.overrideIsSpoken(true);
-                    SlangBuddy.notifyUser(message);
-                } catch (SlangBuddy.UninitializedUsageException e) {
-                    e.printStackTrace();
-                }
             }
-
             return;
         }
 

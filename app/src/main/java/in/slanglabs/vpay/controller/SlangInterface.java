@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
 
@@ -43,13 +42,12 @@ public class SlangInterface {
             "send", "receive", "transfer", "give", "giving", "take", "taking", "credit", "debit"
     };
 
-    private static final String INTENT_SEND = "send";
-    private static final String INTENT_RECEIVE = "receive";
+    public static final String INTENT_SEND = "send";
 
-    private static final String ENTITY_RECEIVER = "receiver";
-    private static final String ENTITY_SENDER = "sender";
-    private static final String ENTITY_AMOUNT = "amount";
-    private static final String ENTITY_NOTES = "notes";
+    public static final String ENTITY_RECEIVER = "receiver";
+    public static final String ENTITY_SENDER = "sender";
+    public static final String ENTITY_AMOUNT = "amount";
+    public static final String ENTITY_NOTES = "notes";
 
     private static Application appContext;
     private static AppActionHandler appActionHandler;
@@ -147,23 +145,8 @@ public class SlangInterface {
         public SlangAction.Status action(SlangIntent slangIntent, SlangSession slangSession) {
             switch (slangIntent.getName()) {
                 case INTENT_SEND:
-                case INTENT_RECEIVE:
-                    SlangEntity receiverEntity = slangIntent.getEntity(ENTITY_RECEIVER);
-                    SlangEntity senderEntity = slangIntent.getEntity(ENTITY_SENDER);
-                    SlangEntity amountEntity  = slangIntent.getEntity(ENTITY_AMOUNT);
-                    SlangEntity notesEntity = slangIntent.getEntity(ENTITY_NOTES);
-
-                    int amount = amountEntity.isResolved() ? Integer.parseInt(amountEntity.getValue()) : 0;
-                    String notes = notesEntity.isResolved() ? notesEntity.getValue() : "NA";
-                    String receiver = receiverEntity.isResolved() ? receiverEntity.getValue() : null;
-                    String sender = senderEntity.isResolved() ? senderEntity.getValue() : null;
-
                     slangSession.waitForActionCompletion();
-                    if (null != sender && null == receiver && amount > 0) {
-                        appActionHandler.receiveMoney(sender, amount, notes, slangSession, this);
-                    } else if (null != receiver && null == sender && amount > 0){
-                        appActionHandler.sendMoney(receiver, amount, notes, slangSession, this);
-                    }
+                    appActionHandler.sendMoney(slangIntent, slangSession, this);
                     break;
             }
             try {
@@ -199,11 +182,6 @@ public class SlangInterface {
 
         @Override
         public void onIntentResolutionEnd(SlangIntent intent, SlangSession session) {}
-
-        @Override
-        public void notifyActionComplete(SlangSession session) {
-            if (null != session) session.notifyActionCompleted(Status.SUCCESS);
-        }
 
         private void setCustomerNames(Set<String> customerNames) {
             mCustomerNames = customerNames;
@@ -276,16 +254,7 @@ public class SlangInterface {
     public interface AppActionHandler {
         void resolveContact(List<String> customerNames, SlangSession session, AppActionListener handler);
         void sendMoney(
-                String name,
-                int amount,
-                String notes,
-                SlangSession session,
-                AppActionListener handler
-        );
-        void receiveMoney(
-                String name,
-                int amount,
-                String notes,
+                SlangIntent slangIntent,
                 SlangSession session,
                 AppActionListener handler
         );
@@ -294,7 +263,6 @@ public class SlangInterface {
 
     public interface AppActionListener {
         void notifyContactResolution(String contactName, SlangSession session);
-        void notifyActionComplete(SlangSession session);
     }
 
     private static List<String> matchCustomerName(String name, Set<String> customerNames) {

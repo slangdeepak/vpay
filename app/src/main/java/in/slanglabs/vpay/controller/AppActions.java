@@ -2,14 +2,10 @@ package in.slanglabs.vpay.controller;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,8 +17,11 @@ import java.util.Map;
 import java.util.Set;
 
 import in.slanglabs.platform.SlangBuddy;
+import in.slanglabs.platform.SlangEntity;
+import in.slanglabs.platform.SlangIntent;
 import in.slanglabs.platform.SlangLocale;
 import in.slanglabs.platform.SlangSession;
+import in.slanglabs.platform.action.SlangAction;
 import in.slanglabs.platform.prompt.SlangMessage;
 import in.slanglabs.vpay.activities.SendActivity;
 import in.slanglabs.vpay.model.AppData;
@@ -99,13 +98,19 @@ public class AppActions implements SlangInterface.AppActionHandler {
     }
 
     public void sendMoney(
-            String name,
-            int amount,
-            String notes,
+            final SlangIntent slangIntent,
             final SlangSession session,
             final SlangInterface.AppActionListener handler
     ) {
-        name = getCleanedUpValue(name);
+        SlangEntity receiverEntity = slangIntent.getEntity(SlangInterface.ENTITY_RECEIVER);
+        SlangEntity amountEntity  = slangIntent.getEntity(SlangInterface.ENTITY_AMOUNT);
+        SlangEntity notesEntity = slangIntent.getEntity(SlangInterface.ENTITY_NOTES);
+
+        int amount = amountEntity.isResolved() ? Integer.parseInt(amountEntity.getValue()) : 0;
+        String notes = notesEntity.isResolved() ? notesEntity.getValue() : "NA";
+        String receiver = receiverEntity.isResolved() ? receiverEntity.getValue() : null;
+
+        String name = getCleanedUpValue(receiver);
         Log.e("sendMoney", "name:" + name);
         boolean isPhoneNumber = false;
         if (name.matches("^[\\d ]+$")) {
@@ -124,44 +129,20 @@ public class AppActions implements SlangInterface.AppActionHandler {
         if (null == contact) contact = PhoneData.getInstance().getContactForName(name);
         if (null != contact) sendIntent.putExtra("upiId", contact.upiId);
         else if (isPhoneNumber) sendIntent.putExtra("upiId", name + "@upi");
-        else sendIntent.putExtra("upiId", "");
+        else {
+            sendIntent.putExtra("upiId", "");
+            if (session.getCurrentLocale().equals(SlangLocale.LOCALE_ENGLISH_IN)) {
+                slangIntent.getCompletionStatement().overrideAffirmative("The beneficiary is not in the contact list, please fill the necessary details and proceed.");
+            } else {
+                slangIntent.getCompletionStatement().overrideAffirmative("प्राप्त व्यक्ति संपर्क सूची में नहीं है, कृपया आवश्यक विवरण भरें और आगे बढ़ें।");
+            }
+        }
         sendIntent.putExtra("amount", amount);
         sendIntent.putExtra("note", notes);
         sendIntent.putExtra("mode", "voice");
         session.getCurrentActivity().startActivity(sendIntent);
 
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                handler.notifyActionComplete(session);
-            }
-        }, 10);
-    }
-
-    public void receiveMoney(
-            final String name,
-            int amount,
-            String notes,
-            final SlangSession session,
-            final SlangInterface.AppActionListener handler
-    ) {
-        //TODO:
-        displayMessage("TODO: Receive from:" + name + ", amount:" + amount + ", notes:" + notes, session.getCurrentActivity());
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                handler.notifyContactResolution(name, session);
-            }
-        }, 10);
-    }
-
-    private void displayMessage(final String message, final Context context)  {
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
-            }
-        }, 10);
+        session.notifyActionCompleted(SlangAction.Status.SUCCESS);
     }
 
     private static String getCleanedUpValue(String value) {
