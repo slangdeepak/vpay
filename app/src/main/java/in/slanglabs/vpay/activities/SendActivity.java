@@ -226,6 +226,11 @@ public class SendActivity extends Activity {
             try {
                 message.overrideIsSpoken(true);
                 SlangBuddy.notifyUser(message);
+                if (locale.equalsIgnoreCase("en")) {
+                    displayMessage("Congratulations, you've successfully sent the money");
+                } else {
+                    displayMessage("बधाई हो, आपने पैसे सफलतापूर्वक भेज दिए हैं");
+                }
             } catch (SlangBuddy.UninitializedUsageException e) {
                 if (locale.equalsIgnoreCase("en")) {
                     displayMessage("Congratulations, you've successfully sent the money");
@@ -264,6 +269,8 @@ public class SendActivity extends Activity {
                 finish();
             }
         });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void handleFail(boolean isVoice, TransactionStatus txnStatus) {
