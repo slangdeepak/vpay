@@ -94,14 +94,10 @@ public class SlangInterface {
         mLaunchedByAssistant = b;
         // If Slang is initialized by now, then do the same thing we would have done at
         // init time
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (SlangBuddy.isInitialized()) {
-                    greetAndTalk();
-                }
-            }
-        }, 1000);
+        if (SlangBuddy.isInitialized()) {
+            greetAndTalk();
+            mLaunchedByAssistant = false;
+        }
     }
 
     private static Pair<String, String> getGreetingPrefix() {
@@ -210,6 +206,10 @@ public class SlangInterface {
                 displayMessage(e.getMessage());
             }
             appActionHandler.onVoiceInitialised();
+            if (mLaunchedByAssistant) {
+                greetAndTalk();
+                mLaunchedByAssistant = false;
+            }
         }
 
         @Override
