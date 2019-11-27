@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.provider.ContactsContract;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,6 +37,7 @@ public class PhoneData {
             String name=phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
             String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
             phoneNumber = phoneNumber.replaceAll("[^\\d.]", "");
+            if (phoneNumber.length() > 10) phoneNumber = phoneNumber.substring(phoneNumber.length()- 10);
             phoneContacts.put(name, new Contact(name, phoneNumber + "@upi"));
         }
         phones.close();
